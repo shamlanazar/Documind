@@ -1,6 +1,5 @@
 import streamlit as st
 import requests
-import os
 
 API_BASE = "http://localhost:8000/api/v1"
 
@@ -20,7 +19,7 @@ if "active_collection" not in st.session_state:
     st.session_state.active_collection = None
 
 if "uploaded_docs" not in st.session_state:
-    st.session_state.uploaded_docs = []
+    st.session_state.uploaded_docs = {}
 
 with st.sidebar:
     st.header("Documents")
@@ -28,7 +27,7 @@ with st.sidebar:
     uploaded_file = st.file_uploader(
         "Upload a PDF",
         type=["pdf"],
-        help="Upload a PDF to start asking questions"
+        help="Upload one or more PDFs"
     )
 
     if uploaded_file:
@@ -36,23 +35,37 @@ with st.sidebar:
             with st.spinner(f"Processing {uploaded_file.name}..."):
                 response = requests.post(
                     f"{API_BASE}/upload",
-                    files={"file": (uploaded_file.name, uploaded_file, "application/pdf")}
+                    files={"file": (
+                        uploaded_file.name,
+                        uploaded_file,
+                        "application/pdf"
+                    )}
                 )
 
                 if response.status_code == 200:
                     data = response.json()
+                    st.session_state.uploaded_docs[uploaded_file.name] = (
+                        data["collection"]
+                    )
                     st.session_state.active_collection = data["collection"]
-                    st.session_state.uploaded_docs.append(uploaded_file.name)
                     st.session_state.messages = []
                     st.success(f"Ready — {data['chunks_created']} chunks indexed")
                 else:
-                    st.error("Upload failed. Check that the API server is running.")
+                    st.error("Upload failed. Is the API server running?")
 
     if st.session_state.uploaded_docs:
         st.divider()
-        st.markdown("**Loaded documents**")
-        for doc in st.session_state.uploaded_docs:
-            st.markdown(f"- {doc}")
+        st.markdown("**Switch document**")
+        selected = st.radio(
+            "Active document",
+            options=list(st.session_state.uploaded_docs.keys()),
+            label_visibility="collapsed"
+        )
+        new_collection = st.session_state.uploaded_docs[selected]
+        if new_collection != st.session_state.active_collection:
+            st.session_state.active_collection = new_collection
+            st.session_state.messages = []
+            st.rerun()
 
     st.divider()
     if st.button("Clear conversation"):
@@ -79,11 +92,17 @@ else:
 
         with st.chat_message("assistant"):
             with st.spinner("Searching document..."):
+                history_to_send = [
+                    {"role": m["role"], "content": m["content"]}
+                    for m in st.session_state.messages[:-1]
+                ]
+
                 response = requests.post(
                     f"{API_BASE}/ask",
                     json={
                         "question": question,
-                        "collection": st.session_state.active_collection
+                        "collection": st.session_state.active_collection,
+                        "chat_history": history_to_send
                     }
                 )
 

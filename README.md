@@ -1,6 +1,6 @@
 # DocuMind — Intelligent Document Q&A
 
-Ask natural language questions across your PDF documents.
+Ask natural language questions across your PDF documents.  
 Get precise answers grounded in source pages — no hallucination.
 
 ## Demo
@@ -24,7 +24,8 @@ python server.py      # terminal 1
 streamlit run app.py  # terminal 2
 ```
 
-## API
-POST /api/v1/upload  — ingest a PDF
-POST /api/v1/ask     — ask a question
-GET  /api/v1/health  — health check
+## API Endpoints
+
+- `POST /api/v1/upload` — Ingest a PDF
+- `POST /api/v1/ask` — Ask a question
+- `GET /api/v1/health` — Health check
