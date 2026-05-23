@@ -3,7 +3,7 @@
 > Ask natural language questions across your PDF documents.
 > Get precise answers grounded in exact source pages — no hallucination.
 
-<!-- 🔗 **Live demo:** [DocuMind.streamlit.app](https://DocuMind.streamlit.app) -->
+🔗 **Live demo:** [documindassistant.streamlit.app](https://documindassistant.streamlit.app)
 
 ---
 
